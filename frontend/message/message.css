@@ -1,0 +1,42 @@
+.message {
+	padding: 1em;
+	border-radius: 10px;
+	/* border-radius: 0.5em; */
+}
+
+.message-1 {
+	background-color: rgba(132, 240, 179, 0.8);
+
+}
+
+.message-2, .message-3 {
+	background-color: rgba(242, 140, 187, 0.8);
+}
+
+.message-4 {
+	background-color: rgba(255, 26, 26, 0.8);
+}
+
+
+
+.errors_count {
+	font-size: 1.2em;
+	margin-bottom: 0.3em;
+}
+
+.comparison {
+	width: 100%;
+	display: grid;
+	grid-template-columns: 40% 30%;
+	margin-bottom: 0.3em;
+}
+
+.comparison__message {
+	display: flex;
+	justify-content: space-between;
+	margin-right: 3em;
+}
+
+.conclusion {
+	font-weight: bold;
+}
