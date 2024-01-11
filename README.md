@@ -76,3 +76,5 @@
 на бэкенд выходит из цикла, запросы больше не шлются.
 
 ![Конец работы приложения](src/end.png)
+
+![Видео как работает приложение](https://github.com/cantylv/homework-bmstu-2023-HammingCode/assets/91948540/5c951354-a24d-46df-a3ee-c0dfcf6fe7a9)
