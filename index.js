@@ -4,9 +4,7 @@ const path = require("path"); // импорт библиотеки path для �
 const app = express();
 const PORT = 3000;
 
-const MAX_RESPONSE_TIMEOUT = 2500; // если timeout будет больше, то мы отправим 502 ошибку
-const MAX_TIMEOUT = 3000; // максимальное время ожидания ответа
-const MIN_TIMEOUT = 500; // минимальное время ожидания
+const MAX_RESPONSE_TIMEOUT = 10000; // если timeout будет больше, то мы отправим 502 ошибку
 
 app.use(express.static(path.join(__dirname, "frontend")));
 
@@ -15,10 +13,40 @@ app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "/frontend/index.html"));
 });
 
+// запуск сервера приложения
+app.listen(PORT, () => {
+    console.log(`Server started at http://localhost:${PORT}`);
+});
 
 // ручка, за которую мы будем дергать бэк, чтобы получить сообщение
 // описание long polling запроса
 app.get("/long-polling-request", (req, res) => {
+    let response_sent = false;
+    // timeout для ответа
+    const timeout = setTimeout(() => {
+        if (!response_sent) {
+            response_sent = true;
+            res.sendStatus(502);
+        }
+    }, MAX_RESPONSE_TIMEOUT);
+
+    const externalData = setInterval(() => {
+        if (!response_sent && Math.random() < 0.05) {
+            ({original, encoded, corrupted, error} = HammingCode());
+            res.send({
+                originalPoly: original,
+                encodedPoly: encoded,
+                corruptedPoly: corrupted,
+                errorCount: error,
+            });
+            response_sent = true;
+            clearTimeout(timeout);
+            clearInterval(externalData);
+        }
+    }, 250); // Проверка каждые 250 миллисекунд
+});
+
+const HammingCode = () => {
     // Информационная часть
     const MAX_VALUE = 255; // максимальное значение случайного числа
     const MIN_VALUE = 0; // минимальное значение случайного числа
@@ -87,30 +115,13 @@ app.get("/long-polling-request", (req, res) => {
     console.log('Двоичное представление закодированного попорченного значения: ', corrupted);
     console.log('Количество сгенерированных ошибок:', errorCount);
 
-    // выбирается случайное время ожидания из отрезка [500, 3000] - время ответа
-    const timeout = Math.round(
-        (MAX_TIMEOUT - MIN_TIMEOUT) * Math.random() + MIN_TIMEOUT
-    );
-
-    // timeout для ответа
-    setTimeout(() => {
-        if (timeout > MAX_RESPONSE_TIMEOUT) {
-            res.sendStatus(502);
-        } else {
-            res.send({
-                originalPoly: original,		// for example: 1010
-                encodedPoly: encoded,			// for example: 1010011
-                corruptedPoly: corrupted,	// for example: 1010010
-                errorCount: errorCount,		// for example: 1
-            });
-        }
-    }, Math.min(timeout, MAX_RESPONSE_TIMEOUT));
-});
-
-// запуск сервера приложения
-app.listen(PORT, () => {
-    console.log(`Server started at http://localhost:${PORT}`);
-});
+    return {
+        original: original,		// for example: 1010
+        encoded: encoded,			// for example: 1010011
+        corrupted: corrupted,	// for example: 1010010
+        error: errorCount,		// for example: 1
+    };
+}
 
 // функция получения остатка
 const EncodeMsg = (data, ENCODED_MESSAGE_LEN, COUNT_CONTROL_BIT) => {
@@ -150,7 +161,6 @@ const EncodeMsg = (data, ENCODED_MESSAGE_LEN, COUNT_CONTROL_BIT) => {
     }
     return encodedMessage;
 };
-
 
 const makeOneErr = (corrupted, ENCODED_MESSAGE_LEN) => {
     // рандомим позицию ошибки
